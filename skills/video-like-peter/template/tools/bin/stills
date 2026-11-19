@@ -1,0 +1,82 @@
+#!/bin/bash
+# stills: render still frames of the film and tile them into one labelled contact sheet.
+# One render at a time per project (a lock in work/locks) plus a free memory check, so the machine stays
+# responsive when several agents look at their scenes at once. The memory check reads macOS
+# kern.memorystatus_level; on other systems it is skipped (always passes).
+#
+# usage: tools/bin/stills <name> <times> [only] [--full] [--cols N] [--crop W:H:X:Y]
+#   name    label for the output: work/render/<name>/stills/*.png and work/qa/<name>.jpg
+#   times   comma separated seconds, e.g. 8.0,8.1,8.2  or a range start:end:step, e.g. 8:12:0.25
+#           (scene time, 0 up to the film length; a time at or past the length, such as the end of 0:8:0.5
+#           on an 8 s film, is skipped with a note, because the last frame starts at length - 1/30 s)
+#   only    comma separated scene ids to build (default: all scenes), e.g. headline,card
+#   --full  render 1920x1080 (default is the 960x540 preview)
+#   --crop  crop every still before tiling (in the rendered size), to inspect a detail
+#   --conform  times are film time (the cut conformed to the music) instead of scene time
+# The sheet has the time of each frame burned in. Open the image and look at it.
+set -u
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$ROOT" || exit 1
+NAME="${1:?name}"; TIMES="${2:?times}"; shift 2
+ONLY=""; FULL=0; COLS=""; CROP=""; CONFORM=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --full) FULL=1 ;;
+    --cols) COLS="$2"; shift ;;
+    --crop) CROP="$2"; shift ;;
+    --conform) CONFORM=1 ;;
+    *) ONLY="$1" ;;
+  esac
+  shift
+done
+case "$TIMES" in
+  *:*) TIMES=$(python3 -c "
+a,b,s=[float(x) for x in '$TIMES'.split(':')]
+n=int((b-a)/s+1e-9)+1
+print(','.join(f'{a+i*s:.3f}' for i in range(n)))") ;;
+esac
+
+LOCK="$ROOT/work/locks/stills.lock"; mkdir -p "$ROOT/work/locks" "$ROOT/work/qa"
+free_pct() { /usr/sbin/sysctl -n kern.memorystatus_level 2>/dev/null || echo 50; }
+start=$(date +%s)
+while ! mkdir "$LOCK" 2>/dev/null; do
+  hp=$(cat "$LOCK/pid" 2>/dev/null)
+  if [ -n "$hp" ] && ! kill -0 "$hp" 2>/dev/null; then rm -rf "$LOCK"; continue; fi
+  # a lock with no pid file older than 10 s was left by a run killed between mkdir and writing its pid
+  if [ -z "$hp" ] && [ "$(python3 -c 'import os,sys,time;print(int(time.time()-os.path.getmtime(sys.argv[1])))' "$LOCK" 2>/dev/null || echo 0)" -gt 10 ]; then rm -rf "$LOCK"; continue; fi
+  if [ $(( $(date +%s) - start )) -ge 300 ]; then echo "[stills] lock busy for 5 min, try again" >&2; exit 75; fi
+  sleep 1
+done
+echo $$ > "$LOCK/pid"
+trap 'rm -rf "$LOCK"' EXIT
+waited=0
+while [ "$(free_pct)" -lt 22 ]; do
+  [ "$waited" -ge 120 ] && { echo "[stills] free memory below 22% for 2 min ($(free_pct)%), try later" >&2; exit 75; }
+  sleep 5; waited=$((waited + 5))
+done
+
+OUT="work/render/$NAME"
+rm -rf "$OUT/stills"   # never mix the frames of two runs on one sheet
+ARGS=(film/index.html --times "$TIMES" --workers 1 --force --out "$OUT")
+[ "$FULL" = 0 ] && ARGS+=(--preview)
+[ -n "$ONLY" ] && ARGS+=(--param "only=$ONLY")
+[ "$CONFORM" = 1 ] && ARGS+=(--param "conform=1")
+LOG=$(node tools/render/render.mjs "${ARGS[@]}" 2>&1); RC=$?
+# page problems that matter: script errors and failed scene builds (missing optional files are normal while scenes are being written)
+echo "$LOG" | grep -E "pageerror|console.error.*(scene|Error|error:)|console.warn|failed to build|TypeError|ReferenceError|SyntaxError|WebGL|shader" | grep -v "Failed to load resource" | head -20
+echo "$LOG" | grep -E "^(done|page|ERROR|note)" | head -8
+[ $RC -ne 0 ] && { echo "$LOG" | tail -15; exit $RC; }
+
+TMP="$OUT/labelled"; rm -rf "$TMP"; mkdir -p "$TMP"
+n=0
+for f in "$OUT"/stills/*.png; do
+  t=$(basename "$f" .png | sed -E 's/.*_t0*([0-9]+\.[0-9]+)$/\1/')
+  VF="scale=640:-2,drawtext=text='${t}':x=8:y=8:fontsize=22:fontcolor=white:box=1:boxcolor=black@0.65:boxborderw=5"
+  [ -n "$CROP" ] && VF="crop=$CROP,scale=640:-2,drawtext=text='${t}':x=8:y=8:fontsize=22:fontcolor=white:box=1:boxcolor=black@0.65:boxborderw=5"
+  ffmpeg -v error -y -i "$f" -vf "$VF" -q:v 3 "$TMP/$(printf %04d $n).jpg"
+  n=$((n + 1))
+done
+[ -z "$COLS" ] && COLS=$(python3 -c "import math;n=$n;print(1 if n==1 else 2 if n<=4 else 3 if n<=12 else 4)")
+ROWS=$(( (n + COLS - 1) / COLS ))
+ffmpeg -v error -y -framerate 1 -i "$TMP/%04d.jpg" -vf "tile=${COLS}x${ROWS}:padding=4:color=0x202020" -frames:v 1 -q:v 3 "work/qa/$NAME.jpg"
+echo "sheet: $ROOT/work/qa/$NAME.jpg  ($n frames, ${COLS}x${ROWS})   stills: $ROOT/$OUT/stills/"

@@ -1,0 +1,13 @@
+# personal data created by the skills
+me/
+**/me/
+
+# model weights (downloaded on first run)
+*.pt
+
+# working folders and caches
+work/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

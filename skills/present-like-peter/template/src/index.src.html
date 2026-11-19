@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-langs="" data-fit="contain">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Deck title</title>
+<style>
+/*{{FONTS}}*/
+/*{{CSS}}*/
+</style>
+</head>
+<body>
+<main id="stage" aria-live="polite">
+
+  <!-- 1. Cold open: a hook before the title. One image, almost no words. -->
+  <section class="slide" data-scene="field" data-steps="1" data-hold="3.5,3" data-theme="dark" aria-label="Cold open">
+    <div class="layer center">
+      <p class="title" data-step="1">One line that makes the room lean in.</p>
+    </div>
+    <aside class="notes"><p>Say: the hook, in one breath. Source: none needed (no facts on screen).</p></aside>
+  </section>
+
+  <!-- 2. Title: thesis in one line -->
+  <section class="slide" data-steps="1" data-hold="3,3" aria-label="Title">
+    <div class="layer center">
+      <p class="kicker" data-step="0">Kicker</p>
+      <h1 class="word" data-step="0">The <em>thesis</em>.</h1>
+      <p class="sub" data-step="1">One quiet subline that says what changes for the audience.</p>
+    </div>
+    <aside class="notes"><p>Say: the one sentence you want them to repeat tomorrow.</p></aside>
+  </section>
+
+  <!-- 3. Number slide: one big number, sourced -->
+  <section class="slide" data-steps="1" data-hold="3,4" aria-label="Number">
+    <div class="layer center">
+      <p class="word"><span data-count="1000">0</span></p>
+      <p class="sub" data-step="1">What the number means, in plain words.</p>
+    </div>
+    <aside class="notes"><p>Source: name, date, URL. Every number on screen has one.</p></aside>
+  </section>
+
+  <!-- 4. Cards: three ideas, built one by one -->
+  <section class="slide" data-steps="3" data-hold="2,2,2,4" aria-label="Three parts">
+    <div class="layer">
+      <p class="kicker">Section</p>
+      <h2 class="title">Three parts, one idea.</h2>
+      <div class="row" style="margin-top:72px">
+        <div class="card" data-step="1" style="flex:1"><h3>First</h3><p>One line each. Short enough to read from the back of the room.</p></div>
+        <div class="card" data-step="2" style="flex:1"><h3>Second</h3><p>Cards are checked by the QA script for overflow and overlap.</p></div>
+        <div class="card" data-step="3" style="flex:1"><h3>Third</h3><p>Reveal one at a time so the speaker controls attention.</p></div>
+      </div>
+    </div>
+    <aside class="notes"><p>Say: one sentence per card, then the link between them.</p></aside>
+  </section>
+
+  <!-- 5. Callback end: return to the cold open image -->
+  <section class="slide" data-scene="field" data-steps="0" data-hold="5" aria-label="End">
+    <div class="layer center">
+      <p class="title">Back where we started, <em>changed</em>.</p>
+    </div>
+    <aside class="notes"><p>Say: the callback line. Then stop talking.</p></aside>
+  </section>
+
+</main>
+
+<div id="hud"><div id="progress"></div><div id="counter"></div></div>
+<div id="notes" role="region" aria-label="Speaker notes"><div class="body"></div></div>
+<div id="help" role="dialog" aria-label="Keys">
+  <p><b>Keys</b>: arrows, space or click to step. Home and End jump.</p>
+  <p>N notes, P autoplay, F full screen, L language, H help, Esc close.</p>
+  <p>URL: ?slide=N&amp;step=M, ?autoplay=1, ?pace=0.8, ?motion=reduced, ?still=1, ?print=1, ?lang=xx</p>
+</div>
+<div id="hint">Arrow keys or click to step. F full screen. N notes. P autoplay.</div>
+
+<script>
+/*{{THREE}}*/
+</script>
+<script>
+/*{{ENGINE}}*/
+</script>
+<script>
+/*{{SCENES}}*/
+</script>
+</body>
+</html>

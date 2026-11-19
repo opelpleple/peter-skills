@@ -1,0 +1,55 @@
+#!/bin/bash
+# film: render the whole film on the film clock (?conform=1) and encode it with the sound track.
+#   tools/bin/film preview [name] [--no-audio]   960x540 check copy   -> work/cuts/<name>_preview.mp4
+#   tools/bin/film full [name] [--no-audio]      1920x1080 master     -> deliver/<name>.mp4 (+ <name>_720p.mp4)
+# FILM_W / FILM_H override the full size (e.g. FILM_W=1280 FILM_H=720 for a 720p master). name defaults to "film". Without --no-audio the sound track audio/mix.wav must exist (tools/audio/mix.py).
+# Then QA contact sheets (two frames per second of film) are written to work/qa/<mode>_sheet_NN.jpg.
+#
+# Full renders are heavy (several browsers plus encoders). Run one at a time. If you have a wrapper that
+# serialises heavy jobs on your machine, point the environment variable HEAVY at it; it is called as
+#   "$HEAVY" <label> -- <command ...>
+# and nothing else changes. Without HEAVY the commands run directly. WORKERS overrides the browser count.
+set -u
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$ROOT" || exit 1
+MODE="preview"; NAME="film"; NOAUDIO=0; n=0
+for a in "$@"; do
+  case "$a" in
+    --no-audio) NOAUDIO=1 ;;
+    *) if [ $n = 0 ]; then MODE="$a"; else NAME="$a"; fi; n=$((n + 1)) ;;
+  esac
+done
+case "$MODE" in preview|full) ;; *) echo "usage: tools/bin/film preview|full [name] [--no-audio]" >&2; exit 2 ;; esac
+HEAVY="${HEAVY:-}"
+[ -n "$HEAVY" ] && [ ! -x "$HEAVY" ] && { echo "HEAVY=$HEAVY is not executable" >&2; exit 2; }
+run() { if [ -n "$HEAVY" ] && [ "${HEAVY_HELD:-0}" != "1" ]; then "$HEAVY" "$NAME-$1" -- "${@:2}"; else "${@:2}"; fi; }
+if [ $NOAUDIO = 0 ] && [ ! -f audio/mix.wav ]; then echo "audio/mix.wav missing: build it with tools/audio/mix.py, or pass --no-audio" >&2; exit 1; fi
+if [ "$MODE" = preview ]; then W=960; H=540; OUT="work/render/film-preview"; WORKERS="${WORKERS:-3}"; else W="${FILM_W:-1920}"; H="${FILM_H:-1080}"; OUT="work/render/film-full"; WORKERS="${WORKERS:-4}"; fi
+rm -rf "$OUT"
+run render node tools/render/render.mjs film/index.html --all --w $W --h $H --workers "$WORKERS" --out "$OUT" --param conform=1 --force --quiet 2>&1 | grep -v "PAGE PROBLEM\|WARNING MV.frames" | tail -6
+[ -f "$OUT/chunks/list.txt" ] || { echo "render failed: no chunk list" >&2; exit 1; }
+# BT.709 limited range, converted with accurate rounding and tagged, so players show the colours that were rendered
+VF="scale=in_range=pc:out_range=tv:out_color_matrix=bt709:flags=accurate_rnd+full_chroma_int+lanczos,format=yuv420p,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv"
+if [ $NOAUDIO = 0 ]; then AIN=(-i audio/mix.wav); AMAP=(-map 1:a); AEND=(-shortest); else AIN=(); AMAP=(); AEND=(-an); fi
+mkdir -p work/cuts deliver work/qa
+if [ "$MODE" = preview ]; then
+  DST="work/cuts/${NAME}_preview.mp4"
+  if [ $NOAUDIO = 0 ]; then ACODEC=(-c:a aac -b:a 192k); else ACODEC=(); fi
+  run encode ffmpeg -v error -y -f concat -safe 0 -i "$OUT/chunks/list.txt" ${AIN[@]+"${AIN[@]}"} -map 0:v ${AMAP[@]+"${AMAP[@]}"} -vf "$VF" -r 30 -c:v libx264 -preset medium -crf 20 -movflags +faststart ${ACODEC[@]+"${ACODEC[@]}"} "${AEND[@]}" "$DST"
+else
+  DST="deliver/${NAME}.mp4"
+  if [ $NOAUDIO = 0 ]; then ACODEC=(-c:a aac -b:a 256k); else ACODEC=(); fi
+  # level 4.1, not 5.0: some phones and chat apps refuse 5.0 for a 1080p30 file
+  run encode ffmpeg -v error -y -f concat -safe 0 -i "$OUT/chunks/list.txt" ${AIN[@]+"${AIN[@]}"} -map 0:v ${AMAP[@]+"${AMAP[@]}"} -vf "$VF" -r 30 -c:v libx264 -profile:v high -level:v 4.1 -x264-params aq-mode=3 -preset slow -crf 15 -g 60 -movflags +faststart ${ACODEC[@]+"${ACODEC[@]}"} "${AEND[@]}" "$DST"
+  # 720p copy for chat apps (aim under about 25 MB; raise -crf if it is larger); skipped when the master is 720p already
+  if [ "$H" -le 720 ]; then SKIP720=1; else SKIP720=0; fi
+  if [ $NOAUDIO = 0 ]; then A7=(-c:a aac -b:a 160k); else A7=(-an); fi
+  [ $SKIP720 = 1 ] || ffmpeg -v error -y -i "$DST" -vf "scale=-2:720:flags=lanczos" -c:v libx264 -profile:v high -level:v 4.1 -preset slow -crf 21 -pix_fmt yuv420p -movflags +faststart "${A7[@]}" "deliver/${NAME}_720p.mp4"
+fi
+# QA sheets: two frames per second with time code
+rm -f work/qa/${MODE}_sheet_*.jpg
+ffmpeg -v error -y -i "$DST" -vf "select='not(mod(n\,15))',scale=384:-2,drawtext=text='%{pts\:hms}':x=6:y=6:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.6,tile=5x6" -fps_mode vfr -q:v 3 "work/qa/${MODE}_sheet_%02d.jpg"
+echo "== $DST"; ffprobe -v error -show_entries format=duration,size:stream=codec_name,width,height,nb_frames,r_frame_rate -of compact "$DST"
+if [ $NOAUDIO = 0 ]; then ffmpeg -hide_banner -i "$DST" -af ebur128=peak=true -f null - 2>&1 | grep -E "I:|Peak:" | tail -2; fi
+ls -lh "$DST" work/qa/${MODE}_sheet_*.jpg
+if [ "$MODE" = full ] && [ -f "deliver/${NAME}_720p.mp4" ]; then ls -lh "deliver/${NAME}_720p.mp4"; fi
+exit 0

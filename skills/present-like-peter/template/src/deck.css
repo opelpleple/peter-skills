@@ -1,0 +1,79 @@
+/* Visual system tokens. Change these first; every slide reads from them. */
+:root {
+  --H: 1080px;
+  --bg: #0B0D12;          /* stage ground */
+  --bg2: #141824;         /* raised surface */
+  --ink: #F4F5F8;         /* main type */
+  --ink2: #A7ADBD;        /* sublines */
+  --ink3: #6B7286;        /* micro, axis labels */
+  --accent: #4C6FFF;      /* the one colour that means "look here" */
+  --accent2: #FFB547;     /* second voice, use rarely */
+  --line: rgba(255,255,255,.12);
+  --sans: "Inter", "Helvetica Neue", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --pad-x: 140px;
+  --pad-y: 120px;
+  --ease: cubic-bezier(.2,.7,.1,1);
+}
+html[data-theme="light"], .slide[data-theme="light"] { --bg: #F5F5F2; --bg2: #FFFFFF; --ink: #111318; --ink2: #4B5163; --ink3: #8A90A2; --line: rgba(0,0,0,.10); }
+
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; transition: background .6s; }
+body { font-family: var(--sans); -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: var(--H); transform-origin: 0 0; overflow: hidden; background: var(--bg); }
+
+/* slides */
+.slide { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .55s var(--ease), visibility 0s .55s; }
+.slide.active { opacity: 1; visibility: visible; transition: opacity .55s var(--ease); }
+.slide > canvas.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.slide .layer { position: absolute; inset: 0; padding: var(--pad-y) var(--pad-x); box-sizing: border-box; display: flex; flex-direction: column; }
+.slide .layer.center { align-items: center; justify-content: center; text-align: center; }
+.slide .layer.bottom { justify-content: flex-end; }
+.slide aside.notes { display: none; }
+
+/* builds */
+[data-step] { opacity: 0; transform: translateY(22px); transition: opacity .6s var(--ease), transform .9s var(--ease); }
+[data-step].on { opacity: 1; transform: none; }
+[data-step].fade { transform: none; }
+.gone { opacity: 0 !important; }
+.instant, .instant * { transition: none !important; }
+html.reduced *, body.still * { transition: none !important; animation: none !important; }
+
+/* type scale: one big thing per slide */
+.kicker { font: 500 26px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 28px; }
+.word { font: 700 220px/.92 var(--sans); letter-spacing: -.045em; margin: 0; }
+.title { font: 700 112px/1.0 var(--sans); letter-spacing: -.035em; margin: 0; max-width: 1500px; }
+.title em, .word em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -.01em; color: var(--accent); }
+.sub { font: 400 40px/1.3 var(--sans); color: var(--ink2); margin: 32px 0 0; max-width: 1300px; }
+.body { font: 400 30px/1.45 var(--sans); color: var(--ink2); margin: 0; }
+.micro { font: 500 20px/1.3 var(--mono); color: var(--ink3); letter-spacing: .06em; }
+.accent { color: var(--accent); }
+
+/* boxes: the QA script checks .box and .card for overflow and overlap */
+.row { display: flex; gap: 32px; }
+.card { background: var(--bg2); border: 1px solid var(--line); border-radius: 20px; padding: 36px 36px 32px; box-sizing: border-box; overflow: hidden; }
+.card h3 { font: 600 36px/1.15 var(--sans); margin: 0 0 14px; letter-spacing: -.01em; }
+.card p { font: 400 25px/1.4 var(--sans); color: var(--ink2); margin: 0; }
+
+/* hud */
+#hud { position: absolute; left: 0; right: 0; bottom: 0; height: 60px; pointer-events: none; z-index: 5; }
+#progress { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: var(--accent); transition: width .6s var(--ease); }
+#counter { position: absolute; right: 48px; bottom: 22px; font: 500 18px/1 var(--mono); color: var(--ink3); letter-spacing: .08em; }
+body.still #hud, body.print #hud { display: none; }
+
+/* notes, help, hint (outside the stage, never scaled) */
+#notes, #help { position: fixed; z-index: 20; display: none; font: 400 17px/1.5 var(--sans); color: #E8EAF0; background: rgba(12,14,20,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 18px 22px; box-sizing: border-box; }
+#notes { left: 24px; right: 24px; bottom: 24px; max-height: 38vh; overflow: auto; }
+#help { left: 50%; top: 50%; transform: translate(-50%,-50%); width: 520px; }
+#notes.show, #help.show { display: block; }
+#notes a { color: #9DB2FF; word-break: break-all; }
+#hint { position: fixed; z-index: 20; left: 50%; bottom: 28px; transform: translateX(-50%); font: 500 14px/1 var(--mono); color: #C8CCD8; background: rgba(12,14,20,.8); padding: 10px 16px; border-radius: 999px; opacity: 0; transition: opacity .5s; pointer-events: none; }
+#hint.show { opacity: 1; }
+
+/* print / PDF: every slide is one 1920 x 1080 page in its final state */
+@page { size: 1920px 1080px; margin: 0; }
+body.print, html:has(body.print) { overflow: visible; height: auto; }
+body.print #stage { position: static; transform: none !important; height: auto; overflow: visible; }
+body.print .slide { position: relative; width: 1920px; height: 1080px; opacity: 1; visibility: visible; break-after: page; overflow: hidden; background: var(--bg); }
+body.print [data-step] { opacity: 1; transform: none; }
+@media print { #notes, #help, #hint, #hud { display: none !important; } }

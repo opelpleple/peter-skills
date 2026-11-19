@@ -1,0 +1,26 @@
+#!/bin/bash
+# check: prove that a scene's frames are a pure function of time (same pixels whatever was rendered before,
+# and in a second browser). Uses the same lock as tools/bin/stills.
+# usage: tools/bin/check <times> [only] [--conform]      e.g. tools/bin/check 1.0,4.5,6.2 card
+# The last line must read DETERMINISTIC.
+set -u
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$ROOT" || exit 1
+TIMES="${1:?times}"; ONLY=""; CONFORM=0
+shift
+for a in "$@"; do case "$a" in --conform) CONFORM=1 ;; *) ONLY="$a" ;; esac; done
+LOCK="$ROOT/work/locks/stills.lock"; mkdir -p "$ROOT/work/locks"
+start=$(date +%s)
+while ! mkdir "$LOCK" 2>/dev/null; do
+  hp=$(cat "$LOCK/pid" 2>/dev/null)
+  if [ -n "$hp" ] && ! kill -0 "$hp" 2>/dev/null; then rm -rf "$LOCK"; continue; fi
+  # a lock with no pid file older than 10 s was left by a run killed between mkdir and writing its pid
+  if [ -z "$hp" ] && [ "$(python3 -c 'import os,sys,time;print(int(time.time()-os.path.getmtime(sys.argv[1])))' "$LOCK" 2>/dev/null || echo 0)" -gt 10 ]; then rm -rf "$LOCK"; continue; fi
+  if [ $(( $(date +%s) - start )) -ge 300 ]; then echo "[check] lock busy for 5 min, try again" >&2; exit 75; fi
+  sleep 1
+done
+echo $$ > "$LOCK/pid"; trap 'rm -rf "$LOCK"' EXIT
+FRAMES=$(python3 -c "print(','.join(str(int(float(x)*30+0.5)) for x in '$TIMES'.split(',')))")
+ARGS=(film/index.html --check --frames "$FRAMES" --preview --workers 1 --out "work/render/check-${ONLY:-all}" --force)
+[ -n "$ONLY" ] && ARGS+=(--param "only=$ONLY")
+[ "$CONFORM" = 1 ] && ARGS+=(--param "conform=1")
+node tools/render/render.mjs "${ARGS[@]}" 2>&1 | grep -v "PAGE PROBLEM" | tail -12

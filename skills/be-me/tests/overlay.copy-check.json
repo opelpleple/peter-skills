@@ -1,0 +1,10 @@
+{
+ "UALEX0001": {
+  "label": "Alex",
+  "closeness": 3,
+  "typical": [
+   "ไม่ต้องครับ ยังไม่ต้องรีบ",
+   "name + ครับ + ask"
+  ]
+ }
+}

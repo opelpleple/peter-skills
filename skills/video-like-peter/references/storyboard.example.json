@@ -1,0 +1,30 @@
+{
+  "title": "Untitled film",
+  "logline": "One sentence: what the viewer knows at the last frame.",
+  "duration": 6.0,
+  "fps": 30,
+  "size": [1920, 1080],
+  "bpm": 120,
+  "rules": ["every arrival on the 0.125 s grid", "text never fades in", "one highlight word per screen", "readable text holds 1.5 s or more"],
+  "refs": [
+    {
+      "id": "R1",
+      "dir": "refs/r1",
+      "frames": ["refs/r1/frames/t000.00.jpg", "refs/r1/frames/t001.00.jpg"],
+      "steal": {
+        "pacing": "what the cut rhythm teaches (measured in refs/r1/cuts.txt)",
+        "transitions": "how one idea hands over to the next",
+        "type": "how words enter, stack, hold and leave",
+        "color": "how many fields, how text colour relates to the field"
+      },
+      "leave": "what you will NOT take (footage, logo, music, sentences, a move that fights your brand)"
+    }
+  ],
+  "shots": [
+    {"id": "S1", "t0": 0.0, "t1": 3.0, "station": "dark", "field": "#14151B", "ink": "#FFFFFF",
+     "copy": "First line", "motion": "streaks in from the left, lands 0.5", "steal": "R1 pacing", "sound": "whoosh on 0.5",
+     "frame": "work/render/board/stills/f00045_t0001.500.png"},
+    {"id": "S2", "t0": 3.0, "t1": 6.0, "station": "light", "field": "#F2F1EC", "ink": "#16171C",
+     "copy": "Second *line*", "motion": "blurs in word by word, lands 3.25, holds", "steal": "R1 type", "sound": ""}
+  ]
+}

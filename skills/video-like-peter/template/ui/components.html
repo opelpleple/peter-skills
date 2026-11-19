@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>UI kit for the film</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* layout of the sheet only: components sit far enough apart that their capture margins do not overlap */
+  body { margin: 0; padding: 120px; font-family: var(--font); color: var(--ink); background: var(--page); }
+  .sheet { display: flex; flex-wrap: wrap; gap: 160px; align-items: flex-start; }
+
+  /* ---- card-demo: a small task card with a status chip, a value slot and a button */
+  .card-demo { width: 420px; box-sizing: border-box; padding: 28px; border-radius: var(--radius);
+    background: var(--white); box-shadow: var(--shadow); }
+  .card-demo .row { display: flex; align-items: center; justify-content: space-between; }
+  .card-demo .label { font-size: 18px; font-weight: 500; color: var(--muted); }
+  .card-demo .chip { font-size: 15px; font-weight: 500; padding: 6px 14px; border-radius: 999px;
+    background: var(--success-soft); color: var(--success); }
+  .card-demo .value { height: 72px; margin: 14px 0 22px; font-size: 56px; font-weight: 700; line-height: 72px; color: var(--ink); }
+  .card-demo .bar { height: 10px; border-radius: 5px; background: var(--accent-soft); overflow: hidden; margin-bottom: 24px; }
+  .card-demo .bar i { display: block; width: 68%; height: 100%; background: var(--accent); border-radius: 5px; }
+  .card-demo button { font: 600 18px var(--font); color: var(--white); background: var(--accent); border: 0;
+    border-radius: 12px; padding: 14px 22px; width: 100%; }
+</style>
+</head>
+<!-- Every element with data-name is one component, captured on its own to film/assets/ui/<name>.png at 3x with
+     transparency (tools/ui/capture.sh). Elements with data-anchor inside it become named points in
+     film/assets/ui/manifest.json (component coordinates, CSS px, top left origin); data-slot marks an EMPTY text
+     slot that the film fills (a counter, typed text), and its font is recorded so the film can match it.
+     data-pad on a component sets its capture margin in CSS px (room for the CSS shadow).
+     Rules: rebuild the screens you need as your own HTML and CSS in your design tokens. Never paste screenshots
+     of a live site. Use a made up demo company and placeholder data; leave numbers that animate as empty slots. -->
+<body>
+<div class="sheet">
+
+<div data-name="card-demo" data-pad="64" class="card-demo">
+  <div class="row"><span class="label" data-anchor="label">Weekly signups</span><span class="chip" data-anchor="chip">On track</span></div>
+  <div class="value" data-anchor="value" data-slot></div>
+  <div class="bar" data-anchor="bar"><i></i></div>
+  <button data-anchor="button">Open report</button>
+</div>
+
+</div>
+</body>
+</html>

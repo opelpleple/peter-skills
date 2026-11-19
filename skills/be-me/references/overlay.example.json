@@ -1,0 +1,26 @@
+{
+ "UALEX0001": {
+  "label": "Alex",
+  "closeness": 3,
+  "register": "working-casual",
+  "address_as": "น้องเอ",
+  "self_as": "พี่",
+  "topics": [
+   "design"
+  ],
+  "typical": [
+   "name + ครับ + one-line status ask",
+   "ack + จัดไปครับ"
+  ],
+  "do": [
+   "Short lines, ครับ on about half"
+  ],
+  "dont": [
+   "Formal greetings"
+  ],
+  "note": "Fictional example."
+ },
+ "UBOT00001": {
+  "skip": true
+ }
+}

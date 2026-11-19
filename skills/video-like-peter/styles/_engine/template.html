@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style Template</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #0f1115;
+    --ink: #f2f1ec;
+    --muted: #9aa0aa;
+    --stage: #1b1f27;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display: grid; place-items: center; overflow: hidden; }
+  /* Full bleed 16:9, letterboxed to fit any viewport. */
+  .stage { position: relative; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9;
+    background: var(--stage); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .bar { position: fixed; left: 16px; right: 16px; top: 12px; display: flex; justify-content: space-between;
+    align-items: center; gap: 12px; pointer-events: none; z-index: 2; }
+  .bar > * { pointer-events: auto; }
+  .label { font-weight: 600; letter-spacing: 0.02em; }
+  .label small { color: var(--muted); font-weight: 400; margin-left: 8px; }
+  a { color: var(--ink); text-decoration: none; border: 1px solid #ffffff33; padding: 6px 10px; border-radius: 999px;
+    background: #00000055; }
+  a:hover { border-color: #ffffff88; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="label">Template <small>reference style using the shared engine</small></div>
+    <a href="../index.html">Back to gallery</a>
+  </div>
+  <div class="stage" id="stage"></div>
+
+<script type="module">
+  // Path works both here (_engine/template.html) and in a copied style folder (styles/<name>/index.html).
+  import { mount } from '../_engine/stage.js';
+  import { DURATION, TITLE, LAYOUT, pose, toPx, titleState, letterReveal, face, ease, impactPulse }
+    from '../_engine/scene.js';
+
+  const INK = '#f2f1ec', ACCENT = '#ffb347', SHADOW = 'rgba(0,0,0,0.35)', PLAT = '#3a4150';
+
+  function render(t, ctx) {
+    const { g, w: W, h: H } = ctx;
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = '#1b1f27';
+    g.fillRect(0, 0, W, H);
+
+    // Floor + platform
+    g.fillStyle = '#232835';
+    g.fillRect(0, LAYOUT.groundY * H, W, H);
+    const P = LAYOUT.platform;
+    const pw = P.w * W, ph = P.h * H;
+    g.fillStyle = PLAT;
+    g.fillRect(P.x * W - pw / 2, P.y * H, pw, ph);
+
+    // Title: per letter rise + fade, timing from scene.js
+    const ts = titleState(t);
+    if (ts.visible) {
+      const size = LAYOUT.titleSize * H;
+      g.font = `700 ${size}px system-ui, sans-serif`;
+      g.textBaseline = 'middle';
+      const chars = [...TITLE];
+      const widths = chars.map((c) => g.measureText(c).width);
+      let x = W / 2 - widths.reduce((a, b) => a + b, 0) / 2;
+      chars.forEach((c, i) => {
+        const u = ease.outBack(letterReveal(t, i, chars.length));
+        g.globalAlpha = Math.min(1, u) * (1 - ts.outP);
+        g.fillStyle = INK;
+        g.fillText(c, x, LAYOUT.titleY * H + (1 - u) * size * 0.6 - ts.outP * size * 0.3);
+        x += widths[i];
+      });
+      g.globalAlpha = 1;
+    }
+
+    // Character
+    const p = pose(t);
+    if (!p.visible) return;
+    const q = toPx(p, W, H);
+    // contact shadow shrinks while airborne
+    const sh = Math.max(0.25, 1 - p.air * 3);
+    const floorY = p.onPlatform || (p.airborne && p.x > P.x - P.w / 2 && p.x < P.x + P.w / 2 && p.y <= P.y + 0.001)
+      ? P.y * H : LAYOUT.groundY * H;
+    g.fillStyle = SHADOW;
+    g.beginPath();
+    g.ellipse(q.x, floorY, q.r * 0.9 * sh, q.r * 0.18 * sh, 0, 0, Math.PI * 2);
+    g.fill();
+
+    g.save();
+    g.translate(q.cx, q.cy);
+    g.rotate(p.rot);
+    g.fillStyle = ACCENT;
+    g.beginPath();
+    g.ellipse(0, 0, q.rx, q.ry, 0, 0, Math.PI * 2);
+    g.fill();
+    // face
+    const f = face(t);
+    const eyeH = q.ry * 0.22 * (1 - f.blink * 0.9);
+    g.fillStyle = '#1b1f27';
+    for (const dx of [-0.32, 0.32]) {
+      g.beginPath();
+      g.ellipse(q.rx * (dx + f.look * 0.15), -q.ry * (0.12 + f.lookUp * 0.15), q.rx * 0.1, eyeH, 0, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.strokeStyle = '#1b1f27';
+    g.lineWidth = Math.max(1.5, q.r * 0.07);
+    g.lineCap = 'round';
+    g.beginPath();
+    g.arc(q.rx * f.look * 0.15, q.ry * 0.18, q.rx * (0.18 + f.smile * 0.12), 0.15 * Math.PI, 0.85 * Math.PI);
+    g.stroke();
+    g.restore();
+
+    // impact flash ring
+    const pulse = impactPulse(t);
+    if (pulse > 0) {
+      g.strokeStyle = `rgba(255,179,71,${pulse * 0.6})`;
+      g.lineWidth = 2;
+      g.beginPath();
+      g.ellipse(q.x, floorY, q.r * (2 - pulse), q.r * 0.3 * (2 - pulse), 0, 0, Math.PI * 2);
+      g.stroke();
+    }
+  }
+
+  const stage = mount({ container: document.getElementById('stage'), duration: DURATION, render });
+  // Click toggles play/pause (handy when inspecting a style).
+  document.getElementById('stage').addEventListener('click', () => stage.toggle());
+</script>
+</body>
+</html>

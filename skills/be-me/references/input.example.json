@@ -1,0 +1,24 @@
+{
+ "users": {
+  "U123": {
+   "name": "Alex Example (Alex)",
+   "display": "Alex",
+   "bot": false,
+   "deleted": false,
+   "title": "Designer"
+  }
+ },
+ "messages": [
+  {
+   "ts": "1767225600.000100",
+   "text": "น้องเอครับ งานถึงไหนแล้ว",
+   "channel_id": "DALEX",
+   "channel_name": "UALEX0001",
+   "is_im": true,
+   "is_mpim": false,
+   "is_private": true,
+   "thread": false,
+   "partner": "UALEX0001"
+  }
+ ]
+}

@@ -1,0 +1,220 @@
+{
+  "motion": {
+    "keywords": [
+      "motion",
+      "three",
+      "canvas",
+      "remotion",
+      "kinetic",
+      "animatic",
+      "webgl",
+      "gsap",
+      "shader",
+      "threejs",
+      "render"
+    ],
+    "packages": [
+      "three",
+      "remotion",
+      "@remotion/cli",
+      "gsap",
+      "pixi.js",
+      "p5",
+      "@react-three/fiber",
+      "framer-motion",
+      "lottie-web"
+    ],
+    "extensions": [
+      ".mp4",
+      ".webm",
+      ".mov",
+      ".glsl"
+    ],
+    "min_ext_files": 10
+  },
+  "film": {
+    "keywords": [
+      "film",
+      "series",
+      "episode",
+      "seedance",
+      "higgsfield",
+      "storyboard",
+      "screenplay",
+      "script",
+      "trailer",
+      "teaser",
+      "drama",
+      "microdrama",
+      "final-cut",
+      "previz",
+      "character-sheet",
+      "manga"
+    ],
+    "packages": [],
+    "extensions": [
+      ".srt",
+      ".fountain"
+    ],
+    "min_ext_files": 3
+  },
+  "decks": {
+    "keywords": [
+      "deck",
+      "slides",
+      "keynote",
+      "presentation",
+      "pitch",
+      "pptx"
+    ],
+    "packages": [
+      "pptxgenjs",
+      "reveal.js",
+      "@marp-team/marp-cli",
+      "python-pptx"
+    ],
+    "extensions": [
+      ".pptx",
+      ".key"
+    ],
+    "min_ext_files": 1
+  },
+  "data": {
+    "keywords": [
+      "analytics",
+      "report",
+      "reports",
+      "metrics",
+      "ga4",
+      "gsc",
+      "sql",
+      "pipeline",
+      "collector",
+      "etl",
+      "kpi",
+      "dataset",
+      "scraper",
+      "audit"
+    ],
+    "packages": [
+      "pandas",
+      "numpy",
+      "pg",
+      "better-sqlite3",
+      "duckdb",
+      "google-analytics-data",
+      "recharts",
+      "d3",
+      "chart.js",
+      "openpyxl",
+      "prisma",
+      "@prisma/client"
+    ],
+    "extensions": [
+      ".sql",
+      ".csv",
+      ".xlsx",
+      ".ipynb",
+      ".parquet"
+    ],
+    "min_ext_files": 5
+  },
+  "product": {
+    "keywords": [
+      "web",
+      "landing",
+      "b2b",
+      "portal",
+      "design system",
+      "design-system",
+      "prototype",
+      "frontend",
+      "dashboard",
+      "admin",
+      "saas"
+    ],
+    "packages": [
+      "next",
+      "react",
+      "vue",
+      "svelte",
+      "vite",
+      "tailwindcss",
+      "@nestjs/core",
+      "express",
+      "astro"
+    ],
+    "extensions": [
+      ".tsx",
+      ".jsx",
+      ".vue",
+      ".svelte"
+    ],
+    "min_ext_files": 20
+  },
+  "ai-tooling": {
+    "keywords": [
+      "agent",
+      "skill",
+      "mcp",
+      "llm",
+      "claude",
+      "prompt",
+      "openrouter",
+      "rag",
+      "voice"
+    ],
+    "packages": [
+      "@anthropic-ai/sdk",
+      "anthropic",
+      "openai",
+      "@modelcontextprotocol/sdk",
+      "mcp",
+      "langchain",
+      "@anthropic-ai/claude-agent-sdk",
+      "elevenlabs"
+    ],
+    "extensions": [],
+    "min_ext_files": 999
+  },
+  "games": {
+    "keywords": [
+      "game",
+      "godot",
+      "unity",
+      "rpg",
+      "arena",
+      "battle"
+    ],
+    "packages": [
+      "godot",
+      "phaser",
+      "pixi.js",
+      "matter-js"
+    ],
+    "extensions": [
+      ".gd",
+      ".tscn",
+      ".unity",
+      ".cs"
+    ],
+    "min_ext_files": 5
+  },
+  "strategy": {
+    "keywords": [
+      "planning",
+      "strategy",
+      "okr",
+      "direction",
+      "roadmap",
+      "investor",
+      "revenue",
+      "memo",
+      "kpi",
+      "pricing"
+    ],
+    "packages": [],
+    "extensions": [],
+    "min_ext_files": 999
+  }
+}
